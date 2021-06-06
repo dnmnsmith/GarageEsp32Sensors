@@ -1,16 +1,16 @@
 #include <Arduino.h>
-#include <SerialGraphicLCD.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include "I2CScan.h"
-
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_BME280.h>
+
+#include "I2CScan.h"
+#include "Display.h"
 
 // Data wire is plugged into port 2 on the Arduino
 #define ONE_WIRE_BUS 15
@@ -31,7 +31,7 @@ DallasTemperature sensors(&oneWire);
 // arrays to hold device addresses
 DeviceAddress insideThermometer;
 
-LCD lcd;
+Display display;
 
 Adafruit_BME280 bme; // I2C
 
@@ -49,6 +49,8 @@ void setup() {
 
   Serial.begin(115200);
   Wire.begin();
+
+  display.init();
 
   i2cScan( "Wire 1", &Wire );
 
@@ -72,10 +74,6 @@ void setup() {
         while (1) delay(10);
     }
  
- // lcd.setBaud('6');
-  lcd.clearScreen                      ();
-  lcd.printStr("Hello");
-
   // Start up the library
   sensors.begin();
   
@@ -86,29 +84,26 @@ void setup() {
 
   // search for devices on the bus and assign based on an index.
   if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0"); 
+  Serial.print("Device address : ");
+  printAddress( insideThermometer );
+  Serial.println();
 
-
+  delay( 5000 );
+  display.clear();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-    sensors.requestTemperatures();
+  sensors.requestTemperatures();
 
-    printTemperature(insideThermometer);
-    Serial.println();
+  printTemperature(insideThermometer);
+  Serial.println();
 
-    Serial.print("Temperature = ");
-    Serial.print(bme.readTemperature());
-    Serial.println(" °C");
-
-    Serial.print("Pressure = ");
-
-    Serial.print(bme.readPressure() / 100.0F);
-    Serial.println(" hPa");
-
-    Serial.print("Humidity = ");
-    Serial.print(bme.readHumidity());
-    Serial.println(" %");
+  display.outsideTemp( bme.readTemperature() );
+  display.insideTemp( sensors.getTempC(insideThermometer) );
+  display.pressure( bme.readPressure() / 100.0F );
+  display.humidity( bme.readHumidity() );
+  display.rssi( -110.0 );
 
   delay(5000);
 }
