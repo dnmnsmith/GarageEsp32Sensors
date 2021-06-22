@@ -126,7 +126,7 @@ void loop() {
   EncodeAndSend("Humidity","Outside",humidity);
   EncodeAndSend("RSSI","Garage",rssi);
 
-  delay(5*60*000);
+  delay(5*60*1000);
 }
 
 void EncodeAndSend( const char *measType, const char *location, float value)
