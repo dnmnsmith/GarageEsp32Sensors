@@ -43,6 +43,7 @@ void reconnect();
 
 void printAddress(DeviceAddress deviceAddress);
 void printTemperature(DeviceAddress deviceAddress);
+void EncodeAndSend( const char *measType, const char *location, float value);
 
 void setup() {
   // put your setup code here, to run once:
@@ -90,18 +91,59 @@ void setup() {
 
   delay( 5000 );
   display.clear();
+
+  setup_wifi();
+  client.setServer(broker, port);
+
+  if (!client.connected()) {
+    reconnect();
+  }
+
 }
 
 void loop() {
   sensors.requestTemperatures();
 
-  display.outsideTemp( bme.readTemperature() );
-  display.insideTemp( sensors.getTempC(insideThermometer) );
-  display.pressure( bme.readPressure() / 100.0F );
-  display.humidity( bme.readHumidity() );
-  display.rssi( (float)WiFi.RSSI() );
+  float outsideTemp = bme.readTemperature();
+  float insideTemp = sensors.getTempC(insideThermometer);
+  float pressure = bme.readPressure() / 100.0F;
+  float humidity = bme.readHumidity();
+  float rssi = (float)WiFi.RSSI();
 
-  delay(5000);
+  display.outsideTemp( outsideTemp );
+  display.insideTemp( insideTemp );
+  display.pressure( pressure );
+  display.humidity( humidity );
+  display.rssi( rssi );
+
+  if (!client.connected()) {
+    reconnect();
+  }
+
+  EncodeAndSend("Temperature","Outside",outsideTemp);
+  EncodeAndSend("Temperature","Garage",insideTemp);
+  EncodeAndSend("Pressure","Garage",pressure);
+  EncodeAndSend("Humidity","Outside",humidity);
+  EncodeAndSend("RSSI","Garage",rssi);
+
+  delay(5*60*000);
+}
+
+void EncodeAndSend( const char *measType, const char *location, float value)
+{
+   StaticJsonDocument<200> message;
+
+   char valueBuffer[ 32 ];
+   sprintf(valueBuffer,"%.1f",value);
+
+    message["type"] = measType;
+    message["location"] = location;
+    message["val"] = valueBuffer;
+  
+    char jsonBuffer[512];
+    serializeJson(message, jsonBuffer);
+    client.publish(measType, jsonBuffer);
+
 }
 
 // function to print a device address
