@@ -102,10 +102,18 @@ void setup() {
 }
 
 void loop() {
-  sensors.requestTemperatures();
+  if (!client.connected()) {
+    reconnect();
+  }
 
+  float insideTemp = 85.0;
+  while (insideTemp == 85.0)
+  {
+    sensors.requestTemperatures();
+    insideTemp = sensors.getTempC(insideThermometer);
+  }
+  
   float outsideTemp = bme.readTemperature();
-  float insideTemp = sensors.getTempC(insideThermometer);
   float pressure = bme.readPressure() / 100.0F;
   float humidity = bme.readHumidity();
   float rssi = (float)WiFi.RSSI();
@@ -115,10 +123,6 @@ void loop() {
   display.pressure( pressure );
   display.humidity( humidity );
   display.rssi( rssi );
-
-  if (!client.connected()) {
-    reconnect();
-  }
 
   EncodeAndSend("Temperature","Outside",outsideTemp);
   EncodeAndSend("Temperature","Garage",insideTemp);
@@ -190,7 +194,8 @@ void setup_wifi() {
 
 void reconnect() {
   // Loop until we're reconnected
-  while (!client.connected()) {
+  for (int i = 0; (i < 120) && !client.connected(); i++)
+  {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
     String clientId = "ESP8266Client-";
@@ -205,5 +210,9 @@ void reconnect() {
       // Wait 5 seconds before retrying
       delay(5000);
     }
+  }
+  if (!client.connected() || WiFi.RSSI() == 0)
+  {
+    ESP.restart();
   }
 }
