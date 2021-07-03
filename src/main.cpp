@@ -43,7 +43,7 @@ void reconnect();
 
 void printAddress(DeviceAddress deviceAddress);
 void printTemperature(DeviceAddress deviceAddress);
-void EncodeAndSend( const char *measType, const char *location, float value);
+void EncodeAndSend( const char *topic, const char *measType, const char *location, float value);
 
 void setup() {
   // put your setup code here, to run once:
@@ -124,16 +124,21 @@ void loop() {
   display.humidity( humidity );
   display.rssi( rssi );
 
-  EncodeAndSend("Temperature","Outside",outsideTemp);
-  EncodeAndSend("Temperature","Garage",insideTemp);
-  EncodeAndSend("Pressure","Garage",pressure);
-  EncodeAndSend("Humidity","Outside",humidity);
-  EncodeAndSend("RSSI","Garage",rssi);
+  EncodeAndSend("Meaurement/Temperature/Outside","Temperature","Outside",outsideTemp);
+  EncodeAndSend("Meaurement/Temperature/Garage","Temperature","Garage",insideTemp);
+  EncodeAndSend("Meaurement/Pressure/Outside","Pressure","Garage",pressure);
+  EncodeAndSend("Meaurement/Humidity/Outside","Humidity","Outside",humidity);
+  EncodeAndSend("Meaurement/RSSI/Garage","RSSI","Garage",rssi);
 
-  delay(5*60*1000);
+  unsigned long now = millis();
+  while ((millis() - now) < 5 * 60 * 1000 )
+  {
+    client.loop();
+    delay( 1 );
+  }
 }
 
-void EncodeAndSend( const char *measType, const char *location, float value)
+void EncodeAndSend( const char *topic, const char *measType, const char *location, float value)
 {
    StaticJsonDocument<200> message;
 
@@ -146,7 +151,7 @@ void EncodeAndSend( const char *measType, const char *location, float value)
   
     char jsonBuffer[512];
     serializeJson(message, jsonBuffer);
-    client.publish(measType, jsonBuffer);
+    client.publish(topic, jsonBuffer);
 
 }
 
