@@ -124,11 +124,11 @@ void loop() {
   display.humidity( humidity );
   display.rssi( rssi );
 
-  EncodeAndSend("Meaurement/Temperature/Outside","Temperature","Outside",outsideTemp);
-  EncodeAndSend("Meaurement/Temperature/Garage","Temperature","Garage",insideTemp);
-  EncodeAndSend("Meaurement/Pressure/Outside","Pressure","Garage",pressure);
-  EncodeAndSend("Meaurement/Humidity/Outside","Humidity","Outside",humidity);
-  EncodeAndSend("Meaurement/RSSI/Garage","RSSI","Garage",rssi);
+  EncodeAndSend("Measurement/Temperature/Outside","Temperature","Outside",outsideTemp);
+  EncodeAndSend("Measurement/Temperature/Garage","Temperature","Garage",insideTemp);
+  EncodeAndSend("Measurement/Pressure/Outside","Pressure","Garage",pressure);
+  EncodeAndSend("Measurement/Humidity/Outside","Humidity","Outside",humidity);
+  EncodeAndSend("Measurement/RSSI/Garage","RSSI","Garage",rssi);
 
   unsigned long now = millis();
   while ((millis() - now) < 5 * 60 * 1000 )
